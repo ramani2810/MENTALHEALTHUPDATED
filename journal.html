@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Journal</title>
+  <link rel="stylesheet" href="journal.css">
+</head>
+<body>
+  <header class="header">
+    <nav>
+      <div class="brand">
+        <a href="index.html" class="brand-link"><img src="images/logo.png" alt="Innerwaves logo"></a>
+        <div class="brand-text">
+          <div class="logo-text"></div>
+          <div class="brand-sub"></div>
+        </div>
+      </div>
+      <div class="nav-links">
+        <ul>
+          <li><a href="index.html">HOME</a></li>
+          <li><a href="moodtracker.html">MOODTRACKER</a></li>
+          <li><a href="journal.html">JOURNAL</a></li>
+          <li><a href="#">BLOG</a></li>
+          <li><a href="#">CONTACT</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="text-box">
+      <h1>MY JOURNAL</h1>
+      <p class="subheading">Write your daily thoughts below and save or download them as a report.</p>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="journal-col">
+      <form id="journalForm">
+        <label for="entryTitle">Title</label>
+        <input id="entryTitle" name="entryTitle" type="text" placeholder="Add a short title">
+
+        <label for="entryText">Write your daily thoughts here</label>
+        <textarea id="entryText" name="entryText" rows="8" placeholder="Write your daily thoughts here..."></textarea>
+
+        <label for="entryImage">Add picture(s) (optional)</label>
+        <input id="entryImage" name="entryImage" type="file" accept="image/*" multiple>
+
+        <label for="entryImportant">Important / To remember (short)</label>
+        <textarea id="entryImportant" name="entryImportant" rows="4" placeholder="Key points to remember..." class="lined"></textarea>
+
+        <div class="form-actions">
+          <button type="button" id="saveJournal" class="hero-btn">Save Entry</button>
+          <button type="button" id="downloadJournal" class="hero-btn">Download Report</button>
+          <span id="journalMsg" class="save-msg" aria-live="polite"></span>
+        </div>
+      </form>
+
+      
+    </section>
+
+    <aside class="sidebar">
+      <div class="gallery-box">
+        <h3>Photos</h3>
+        <div id="gallery" class="gallery">No images uploaded.</div>
+      </div>
+      <div class="important-box">
+        <h3>Important / To Remember</h3>
+        <div id="importantPreview" class="important-preview">No notes</div>
+      </div>
+      <div class="sidebar-actions">
+        <button id="saveJournalRight" class="hero-btn">Save Entry</button>
+        <button id="downloadJournalRight" class="hero-btn">Download Report</button>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    // Enhanced journal functionality: handle multiple images, important notes, and per-entry downloads
+    const journalKey = 'journalEntries_v1';
+    let currentImageData = []; // dataURI strings for preview and saving
+
+    function loadEntries(){
+      const raw = localStorage.getItem(journalKey);
+      return raw ? JSON.parse(raw) : [];
+    }
+
+    function saveEntries(entries){
+      localStorage.setItem(journalKey, JSON.stringify(entries));
+    }
+
+    function renderGallery(){
+      const g = document.getElementById('gallery');
+      if(!g) return;
+      g.innerHTML = '';
+      if(!currentImageData.length){ g.textContent = 'No images uploaded.'; return; }
+      currentImageData.forEach(src=>{
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'thumb';
+        g.appendChild(img);
+      });
+    }
+
+    function renderEntries(){
+      const list = document.getElementById('entryList');
+      list.innerHTML = '';
+      const entries = loadEntries();
+      entries.slice().reverse().forEach((e, idx)=>{
+        const li = document.createElement('li');
+        li.className = 'entry-item';
+        const title = document.createElement('strong');
+        title.textContent = e.title || 'Untitled';
+        const date = document.createElement('div');
+        date.className = 'entry-meta';
+        date.textContent = e.date;
+        const text = document.createElement('p');
+        text.textContent = e.text;
+
+        li.appendChild(title);
+        li.appendChild(date);
+        li.appendChild(text);
+
+        if(e.images && e.images.length){
+          const row = document.createElement('div'); row.style.marginTop='8px';
+          e.images.slice(0,3).forEach(s=>{ const im = document.createElement('img'); im.src = s; im.className='thumb small'; row.appendChild(im); });
+          li.appendChild(row);
+        }
+
+        // per-entry download
+        const dl = document.createElement('button');
+        dl.className = 'hero-btn small-btn';
+        dl.textContent = 'Download';
+        dl.addEventListener('click', function(){
+          const html = formatJournalDoc(e, true);
+          const filename = 'journal-'+(e.title? e.title.replace(/[^a-z0-9]+/gi,'_').toLowerCase() : 'entry')+'-'+(new Date(e.date).toISOString().slice(0,10))+'.doc';
+          downloadDoc(filename, html);
+        });
+        li.appendChild(dl);
+
+        list.appendChild(li);
+      });
+
+      // update today's note and important preview
+      const entriesAll = loadEntries();
+      const latest = entriesAll[entriesAll.length -1];
+      const todayNote = document.getElementById('todayNote');
+      const importantPreview = document.getElementById('importantPreview');
+      if(latest){
+        todayNote.textContent = latest.text.slice(0, 300) || 'No text';
+        importantPreview.textContent = latest.important || 'No notes';
+      } else {
+        todayNote.textContent = 'No entry saved yet.';
+        importantPreview.textContent = 'No notes';
+      }
+    }
+
+    function formatJournalDoc(entry, includeImages){
+      const heading = '<h1 style="font-family: Arial, sans-serif; color:#102a43;">Journal Entry</h1>';
+      let body = '<p style="font-family: Arial, sans-serif; color:#102a43;">Date: '+entry.date+'</p>';
+      body += '<h2 style="font-family: Arial, sans-serif; color:#102a43;">'+(entry.title||'Untitled')+'</h2>';
+      body += '<div style="font-family: Arial, sans-serif; color:#102a43; white-space:pre-wrap; margin-bottom:8px;">'+(entry.text||'')+'</div>';
+      if(entry.important) body += '<p style="font-family: Arial, sans-serif; color:#102a43; font-weight:700;">Important: '+entry.important+'</p>';
+      if(includeImages && entry.images && entry.images.length){
+        entry.images.forEach(src => { body += '<div><img src="'+src+'" style="max-width:400px; display:block; margin:8px 0;"></div>'; });
+      }
+      return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>'+heading+body+'</body></html>';
+    }
+
+    function downloadDoc(filename, content){
+      const blob = new Blob([content], {type: 'application/msword'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 600);
+    }
+
+    // handle image input preview
+    document.getElementById('entryImage').addEventListener('change', function(e){
+      currentImageData = [];
+      const files = Array.from(e.target.files || []);
+      if(!files.length){ renderGallery(); return; }
+      let loaded = 0;
+      files.forEach(f=>{
+        const fr = new FileReader();
+        fr.onload = function(evt){ currentImageData.push(evt.target.result); loaded++; if(loaded===files.length) renderGallery(); };
+        fr.readAsDataURL(f);
+      });
+    });
+
+    // sync important notes preview live
+    const impEl = document.getElementById('entryImportant');
+    if(impEl){ impEl.addEventListener('input', function(){ document.getElementById('importantPreview').textContent = this.value || 'No notes'; }); }
+
+    // left save button
+    document.getElementById('saveJournal').addEventListener('click', function(){
+      const title = document.getElementById('entryTitle').value.trim();
+      const text = document.getElementById('entryText').value.trim();
+      const important = document.getElementById('entryImportant').value.trim();
+      if(!text){ const m = document.getElementById('journalMsg'); m.textContent = 'Please write something before saving.'; m.style.color = '#b33'; return; }
+      const entries = loadEntries();
+      const entry = { title, text, date: new Date().toLocaleString(), images: currentImageData.slice(), important };
+      entries.push(entry);
+      saveEntries(entries);
+      renderEntries();
+      document.getElementById('journalMsg').textContent = 'Saved.'; document.getElementById('journalMsg').style.color = '#0b5a6b';
+    });
+
+    // right save button uses same logic
+    document.getElementById('saveJournalRight').addEventListener('click', function(){ document.getElementById('saveJournal').click(); });
+
+    // download current form
+    document.getElementById('downloadJournal').addEventListener('click', function(){
+      const title = document.getElementById('entryTitle').value.trim();
+      const text = document.getElementById('entryText').value.trim();
+      const important = document.getElementById('entryImportant').value.trim();
+      if(!text){ const m = document.getElementById('journalMsg'); m.textContent = 'Please write something before downloading.'; m.style.color = '#b33'; return; }
+      const entry = { title, text, date: new Date().toLocaleString(), images: currentImageData.slice(), important };
+      const html = formatJournalDoc(entry, true);
+      const filename = 'journal-'+(title? title.replace(/[^a-z0-9]+/gi,'_').toLowerCase() : 'entry')+'-'+(new Date().toISOString().slice(0,10))+'.doc';
+      downloadDoc(filename, html);
+    });
+
+    document.getElementById('downloadJournalRight').addEventListener('click', function(){ document.getElementById('downloadJournal').click(); });
+
+    // initialize
+    renderGallery();
+    renderEntries();
+  </script>
+</body>
+</html>

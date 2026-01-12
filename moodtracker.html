@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Tracker</title>
+    <link rel="stylesheet" href="moodtracker.css">
+</head>
+<body>
+  <section class="header">
+     <nav>
+       <div class="brand">
+         <a href="index.html" class="brand-link"><img src="images/logo.png" alt="Innerwaves logo"></a>
+         <div class="brand-text">
+           <div class="logo-text"></div>
+           <div class="brand-sub"></div>
+         </div>
+       </div>
+       <div class="nav-links">
+        <ul>
+            <li><a href="">HOME</a></li>
+            <li><a href="">ABOUT</a></li>
+            <li><a href="">FEATURES</a></li>
+            <li><a href="">BLOG</a></li>
+            <li><a href="">CONTACT</a></li>
+        </ul>
+    </div>
+    <br> <br>
+     </nav>
+  <div class="text-box">
+  <h1>MOODTRACKER</h1>
+  <p class="subheading">This tool is intended for self-reflection and general well-being support and does not replace professional medical advice.</p>
+  </div>
+  </section>
+  <main class="content">
+    <div class="form-card">
+   <form id="moodForm">
+    <div class="form-grid">
+    <label for="Date">Date:</label>
+    <input type="date" id="Date" name="Date">
+     <label for="Time">Time:</label>
+    <input type="time" id="Time" name="Time">
+
+    <label for="Mood">How are you feeling today?</label>
+    <select id="Mood" name="Mood" required onchange="updatedemoji()"> 
+    <option value="Happy">Happy</option>
+    <option value="Calm">Calm</option>
+    <option value="Sad">Sad</option>
+    <option value="Anxious">Anxious</option>
+    <option value="Stressed">Stressed</option>
+    <option value="Angry">Angry</option>
+    <option value="Tired">Tired</option>
+    <option value="Focused">Focused</option>
+    </select>
+    <label for="intensity">How Intense is your Mood? :</label>
+  <div class="range-wrapper">
+    <input type="range" id="intensity" name="intensity" min="1" max="5" value="3" oninput="updateIntensityValue(this.value)">
+    <div class="range-value"><span id="intensityValue">3</span>/5</div>
+  </div>
+    <fieldset>
+      <legend>Secondary Feelings (Optional)</legend>
+      <p>Select any additional feelings you are experiencing.</p>
+      <label>
+        <input type="checkbox" name="secondaryMood" value="tired">
+        Tired
+      </label><br>
+      <label>
+        <input type="checkbox" name="secondaryMood" value="restless">
+        Restless
+      </label><br>
+      <label>
+        <input type="checkbox" name="secondaryMood" value="unmotivated">
+        Unmotivated
+      </label><br>
+      <label>
+        <input type="checkbox" name="secondaryMood" value="irritable">
+        Irritable
+      </label><br>
+      <label>
+        <input type="checkbox" name="secondaryMood" value="overthinking">
+        Overthinking
+      </label><br>
+      <label>
+        <input type="checkbox" name="secondaryMood" value="lonely">
+        Lonely
+      </label>
+    </fieldset>
+    <label for="Sleep">How much sleep did you get last night?</label>
+    <input type="number" id="Sleep" name="Sleep" min="0" max="24">
+    <label for="Water">How much water did you drink today?</label>
+    <input type="number" id="Water" name="Water" min="0">
+    <label for="activity">How intense did you do activities?</label>
+    <select name="activity">
+  <option value="">Select intensity</option>
+  <option value="none">None</option>
+  <option value="light">Light</option>
+  <option value="moderate">Moderate</option>
+  <option value="intense">Intense</option>
+</select>
+    
+    <fieldset>
+  <legend>Which meals did you have today?</legend>
+
+  <label><input type="checkbox" value="breakfast"> Breakfast</label><br>
+  <label><input type="checkbox" value="lunch"> Lunch</label><br>
+  <label><input type="checkbox" value="dinner"> Dinner</label>
+</fieldset>
+
+<fieldset>
+  <legend>Overall food type today</legend>
+
+  <label><input type="radio" name="foodType" value="healthy"> Healthy</label><br>
+  <label><input type="radio" name="foodType" value="balanced"> Balanced</label><br>
+  <label><input type="radio" name="foodType" value="junk"> Junk / Fast food</label>
+</fieldset>
+
+    <label for="calories">How many calories of food did you take today?</label>
+    <input type="number" id="calories" name="calories" min="0">
+
+    <label for="energylevel">What is your energy level today?</label>
+  <div class="range-wrapper">
+    <input type="range" id="energylevel" name="energylevel" min="1" max="5" value="3" oninput="updateEnergyValue(this.value)">
+    <div class="range-value"><span id="energyValue">3</span>/5</div>
+  </div>
+    </div>
+  <br>
+  <div class="form-actions">
+    <button type="button" id="saveBtn" class="hero-btn">Save Entry</button>
+    <button type="button" id="downloadBtn" class="hero-btn download-btn">Download Report</button>
+    <div id="saveMsg" class="save-msg" aria-live="polite"></div>
+  </div>
+   </form>
+   </div>
+  </main>
+  <script>
+    function updateIntensityValue(value){
+      var el = document.getElementById('intensityValue');
+      if(el) el.textContent = value;
+    }
+    function updateEnergyValue(value){
+      var el = document.getElementById('energyValue');
+      if(el) el.textContent = value;
+    }
+    // set initial values on DOM load
+    document.addEventListener('DOMContentLoaded', function(){
+      var i = document.getElementById('intensity');
+      var e = document.getElementById('energylevel');
+      if(i) updateIntensityValue(i.value);
+      if(e) updateEnergyValue(e.value);
+    });
+  </script>
+  <script>
+    // collect form values and return an object
+    function collectFormData(){
+      const f = document.getElementById('moodForm');
+      const data = {};
+      const formData = new FormData(f);
+      // simple text inputs & selects
+      ['Date','Time','Mood','activity','Sleep','Water','calories','intensity','energylevel'].forEach(k=>{
+        data[k] = formData.get(k) || '';
+      });
+      // secondary moods (checkboxes)
+      data.secondaryMood = [];
+      for(const v of formData.getAll('secondaryMood')) data.secondaryMood.push(v);
+      // meals
+      data.meals = [];
+      ['breakfast','lunch','dinner'].forEach(m=>{ if(f.querySelector('input[value="'+m+'"][type="checkbox"]')?.checked) data.meals.push(m); });
+      // food type radios
+      data.foodType = formData.get('foodType') || '';
+      return data;
+    }
+
+    function formatDocHtml(data){
+      const now = new Date();
+      const timestamp = now.toLocaleString();
+      const heading = '<h1 style="font-family: Arial, sans-serif; color:#102a43;">Mood Report</h1>';
+      let body = '<p style="font-family: Arial, sans-serif; color:#102a43;">Generated: '+timestamp+'</p>';
+      body += '<table style="font-family: Arial, sans-serif; width:100%; border-collapse: collapse;">';
+      function row(label, val){
+        return '<tr><td style="padding:6px 8px; width:35%; font-weight:700; vertical-align:top;">'+label+'</td><td style="padding:6px 8px; vertical-align:top;">'+(val||'—')+'</td></tr>';
+      }
+      body += row('Date', data.Date);
+      body += row('Time', data.Time);
+      body += row('Mood', data.Mood);
+      body += row('Mood intensity (1-5)', data.intensity);
+      body += row('Secondary feelings', data.secondaryMood.length? data.secondaryMood.join(', '): 'None');
+      body += row('Sleep (hours)', data.Sleep);
+      body += row('Water (cups or liters)', data.Water);
+      body += row('Activity intensity', data.activity);
+      body += row('Meals had', data.meals.length? data.meals.join(', '): 'None');
+      body += row('Overall food type', data.foodType);
+      body += row('Calories', data.calories);
+      body += row('Energy level (1-5)', data.energylevel);
+      body += '</table>';
+      return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>'+heading+body+'</body></html>';
+    }
+
+    function downloadDoc(filename, htmlContent){
+      const blob = new Blob([htmlContent], {type: 'application/msword'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 500);
+    }
+
+    // Save button behavior: validate minimal fields, show saved message, enable download
+    document.getElementById('saveBtn').addEventListener('click', function(){
+      const data = collectFormData();
+      // simple validation: require Date and Mood
+      if(!data.Date || !data.Mood){
+        const msg = document.getElementById('saveMsg');
+        msg.textContent = 'Please fill Date and Mood before saving.';
+        msg.style.color = '#b33';
+        return;
+      }
+      // show success message
+      const msg = document.getElementById('saveMsg');
+      msg.textContent = 'Saved — you can download the report.';
+      msg.style.color = '#0b5a6b';
+      // enable download
+      document.getElementById('downloadBtn').disabled = false;
+      // optionally auto-generate file now and attach to the download button via dataset
+      const html = formatDocHtml(data);
+      const filename = 'mood-report-'+(data.Date || new Date().toISOString().slice(0,10))+'.doc';
+      document.getElementById('downloadBtn').dataset.content = html;
+      document.getElementById('downloadBtn').dataset.filename = filename;
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', function(){
+      const html = this.dataset.content || formatDocHtml(collectFormData());
+      const filename = this.dataset.filename || ('mood-report-'+new Date().toISOString().slice(0,10)+'.doc');
+      downloadDoc(filename, html);
+    });
+  </script>
+    
+</body>
+</html>
